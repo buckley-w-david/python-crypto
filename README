@@ -1,4 +1,7 @@
-HEADER
+Name:           David Buckley
+Student Number: 0894593
+Date:           March 8th, 2017
+
 
 Requirments:
 To run, this implimentation requires all default packages in python 3.6 (lower versions will not work, this implimentation
@@ -33,10 +36,10 @@ optional arguments:
   -h, --help            show this help message and exit
   --blocksize {32,64,128}
                         The block size in bits for the cipher to operate on
-                        the input data (32, 64, 128)
+                        the input data (32, 64, 128), default is 64
   --keysize KEYSIZE     The key size in bits for the cihper to generate
-                        (0-2040)
-  --rounds ROUNDS       The number of rounds used in the key expansion (0-255)
+                        (0-2040), default is 128
+  --rounds ROUNDS       The number of rounds used in the key expansion (0-255), default is 12
 
 ------------------------------------------------------------------------------
 Decryption operation usage
