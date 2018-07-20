@@ -1,8 +1,8 @@
 # python-crypto
 
-Originally this repository was for an assignment in my Computer Security course at the Univeristy of Guelph.
+Originally this repository was for an assignment to impliment RC5 in my Computer Security course at the Univeristy of Guelph.
 
-In the interest of public good since I occasionally notice people stumbling across this repo, I've since refactored it so it's a least not quite so bad as it was when originally implimented.
+In the interest of public good since I occasionally notice people stumbling across this repo, I've since refactored it so it's a least not quite so bad as it was when originally implimented, however the code is still pretty terrible.
 
 ## Usage
 

@@ -1,3 +1,4 @@
+'''Please don't ever write Python like this, it's terrible'''
 import math
 import typing
 
