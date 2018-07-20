@@ -15,14 +15,14 @@ class Key:
 
 def _encrypt(args):
     key = randbits(args.keysize).to_bytes(args.keysize//8, byteorder='little')
+    cipher = rc5.RC5(key, args.blocksize, args.rounds)
+
     if (args.cmdtext):
-        with BytesIO() as f, open(args.outfile, 'wb') as out:
-            f.write(args.text.encode())
-            f.seek(0)
-            rc5.encrypt_file(f, out, key, args.blocksize, args.rounds)
+        with open(args.outfile, 'wb') as out:
+            out.write(cipher.encrypt(args.text.encode()))
     else:
         with open('{}'.format(args.infile), 'rb') as f, open(args.outfile, 'wb') as out:
-            rc5.encrypt_file(f, out, key, args.blocksize, args.rounds)
+            out.write(cipher.encrypt(f.read()))
 
     stored_key = Key(key, args.blocksize, args.keysize, args.rounds)
     with open('{}.key'.format(args.outfile), 'wb') as out:
@@ -32,14 +32,14 @@ def _decrypt(args):
     key = None
     with open(args.key, 'rb') as f:
         key = pickle.load(f)
-    if (args.cmdtext):
+    cipher = rc5.RC5(key.key, key.blocksize, key.rounds)
+
+    if args.cmdtext:
         with BytesIO() as f, open(args.outfile, 'wb') as out:
-            f.write(args.text.encode())
-            f.seek(0)
-            rc5.decrypt_file(f, out, key.key, key.blocksize, key.rounds)
+            out.write(cipher.decrypt(args.text.encode()))
     else:
         with open('{}'.format(args.infile), 'rb') as f, open(args.outfile, 'wb') as out:
-            rc5.decrypt_file(f, out, key.key, key.blocksize, key.rounds)
+            out.write(cipher.decrypt(f.read()))
 
 
 def _keysize_type(x):
