@@ -1,0 +1,22 @@
+[tool.poetry]
+keywords = ['cryptography']
+name = "python-crypto"
+version = "0.1.0"
+description = "Simple python implimentations of crytographic algorithms - strictly for educational purposes"
+license = "MIT"
+readme = 'README.md'
+repository = "https://github.com/buckley-w-david/python-crypto"
+homepage = "https://github.com/buckley-w-david/python-crypto"
+authors = ["David Buckley <buckley.w.david@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+
+[tool.poetry.dev-dependencies]
+pytest = "^3.0"
+pylint = "^2.0"
+mypy = "^0.620.0"
+pytest-cov = "^2.5"
+
+[tool.poetry.scripts]
+crypto = 'python_crypto.cli:main'

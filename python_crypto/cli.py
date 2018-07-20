@@ -4,7 +4,7 @@ import argparse
 from secrets import randbits
 from io import BytesIO
 import pickle
-import RC5
+from python_crypto.symmetric import rc5
 
 class Key:
     def __init__(self, key, blocksize, keysize, rounds):
@@ -19,10 +19,10 @@ def _encrypt(args):
         with BytesIO() as f, open(args.outfile, 'wb') as out:
             f.write(args.text.encode())
             f.seek(0)
-            RC5.encrypt_file(f, out, key, args.blocksize, args.rounds)
-    else:    
+            rc5.encrypt_file(f, out, key, args.blocksize, args.rounds)
+    else:
         with open('{}'.format(args.infile), 'rb') as f, open(args.outfile, 'wb') as out:
-            RC5.encrypt_file(f, out, key, args.blocksize, args.rounds)
+            rc5.encrypt_file(f, out, key, args.blocksize, args.rounds)
 
     stored_key = Key(key, args.blocksize, args.keysize, args.rounds)
     with open('{}.key'.format(args.outfile), 'wb') as out:
@@ -36,10 +36,10 @@ def _decrypt(args):
         with BytesIO() as f, open(args.outfile, 'wb') as out:
             f.write(args.text.encode())
             f.seek(0)
-            RC5.decrypt_file(f, out, key.key, key.blocksize, key.rounds)
+            rc5.decrypt_file(f, out, key.key, key.blocksize, key.rounds)
     else:
         with open('{}'.format(args.infile), 'rb') as f, open(args.outfile, 'wb') as out:
-            RC5.decrypt_file(f, out, key.key, key.blocksize, key.rounds)
+            rc5.decrypt_file(f, out, key.key, key.blocksize, key.rounds)
 
 
 def _keysize_type(x):
@@ -54,7 +54,8 @@ def _rounds_type(x):
         raise argparse.ArgumentTypeError("invalid choice: {} (choose from 0-255)".format(x))
     return x
 
-if __name__ == '__main__':
+
+def main():
     #Main argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--cmdtext', action='store_true',
@@ -62,13 +63,13 @@ if __name__ == '__main__':
 
     subparsers = parser.add_subparsers(dest='operation')
     subparsers.required = True
-    
+
     #Subparser for encryption
     parser_e = subparsers.add_parser('encrypt', help='Option to select to encrypt input')
     parser_e.add_argument('infile', help="The plaintext wanted to be encrypted/decrypted")
     parser_e.add_argument('--blocksize', type=int, choices=(32, 64, 128), default=64,
                         help="The block size in bits for the cipher to operate on the input data (32, 64, 128), default 64")
-    
+
     parser_e.add_argument('--keysize', type=_keysize_type, default=128,
                         help="The key size in bits for the cihper to generate (0-2040), default 128")
 
@@ -87,4 +88,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.func(args)
 
-    
+
+if __name__ == '__main__':
+    main()
