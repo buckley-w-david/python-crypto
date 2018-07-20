@@ -1,10 +1,10 @@
-# python-cryto
+# python-crypto
 
 Originally this repository was for an assignment in my Computer Security course at the Univeristy of Guelph.
 
 In the interest of public good since I occasionally notice people stumbling across this repo, I've since refactored it so it's a least not quite so bad as it was when originally implimented.
 
-# Usage
+## Usage
 
 [Poetry](https://github.com/sdispater/poetry) is a pretty great dependency management and packaging tool, I use it. If you want to use this for some reason, I suggest checking it out. Once you have it up just run `poetry dev` and it'll be setup and ready.
 
