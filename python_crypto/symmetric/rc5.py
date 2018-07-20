@@ -1,19 +1,23 @@
 import math
+import typing
 
-def _rotate_left(val, r_bits, max_bits):
+from python_crypto.cipher import Cipher
+
+
+def _rotate_left(val: int, r_bits: int, max_bits: int) -> int:
     v1 = (val << r_bits%max_bits) & (2**max_bits-1)
     v2 = ((val & (2**max_bits-1)) >> (max_bits-(r_bits%max_bits)))
     return v1 | v2
 
-def _rotate_right(val, r_bits, max_bits):
+def _rotate_right(val: int, r_bits: int, max_bits: int) -> int:
     v1 = ((val & (2**max_bits-1)) >> r_bits%max_bits)
     v2 = (val << (max_bits-(r_bits%max_bits)) & (2**max_bits-1))
 
     return v1 | v2
 
-def _expand_key(key, wordsize, rounds):
+def _expand_key(key: bytes, wordsize: int, rounds: int) -> typing.List[int]:
     #Pads key so that it is aligned with the word size, then splits it into words
-    def _align_key(key, align_val):
+    def _align_key(key: bytes, align_val: int) -> typing.List[int]:
         while len(key) % (align_val):
             key += b'\x00' #Add 0 bytes until the key length is aligned to the block size
 
@@ -24,16 +28,17 @@ def _expand_key(key, wordsize, rounds):
         return L
 
     #generation function of the constants for the extend step
-    def _const(w):
+    def _const(w: int) -> typing.Tuple[int, int]:
         if w == 16:
             return (0xB7E1, 0x9E37) # Returns the value of P and Q
         elif w == 32:
             return (0xB7E15163, 0x9E3779B9)
         elif w == 64:
             return (0xB7E151628AED2A6B, 0x9E3779B97F4A7C15)
+        raise ValueError('Bad word sie')
 
     #Generate pseudo-random list S
-    def _extend_key(w, r):
+    def _extend_key(w: int, r: int) -> typing.List[int]:
         P, Q = _const(w)
         S = [P]
         t = 2*(r+1)
@@ -42,7 +47,7 @@ def _expand_key(key, wordsize, rounds):
 
         return S
 
-    def _mix(L, S, r, w, c):
+    def _mix(L: typing.List[int], S: typing.List[int], r: int, w: int, c: int) -> typing.List[int]:
         t = 2*(r+1)
         m = max(c, t)
         A = B = i = j = 0
@@ -63,7 +68,7 @@ def _expand_key(key, wordsize, rounds):
 
     return S
 
-def _encrypt_block(data, expanded_key, blocksize, rounds):
+def _encrypt_block(data: bytes, expanded_key: typing.List[int], blocksize: int, rounds: int) -> bytes:
     w = blocksize//2
     b = blocksize//8
     mod = 2**w
@@ -81,7 +86,7 @@ def _encrypt_block(data, expanded_key, blocksize, rounds):
     res = A.to_bytes(b//2, byteorder='little') + B.to_bytes(b//2, byteorder='little')
     return res
 
-def _decrypt_block(data, expanded_key, blocksize, rounds):
+def _decrypt_block(data: bytes, expanded_key: typing.List[int], blocksize: int, rounds: int) -> bytes:
     w = blocksize//2
     b = blocksize//8
     mod = 2**w
@@ -99,31 +104,55 @@ def _decrypt_block(data, expanded_key, blocksize, rounds):
     res = A.to_bytes(b//2, byteorder='little') + B.to_bytes(b//2, byteorder='little')
     return res
 
-def encrypt_file(infile, outfile, key, blocksize, rounds):
-    w = blocksize//2
-    b = blocksize//8
 
-    expanded_key = _expand_key(key, w, rounds)
+class RC5(Cipher):
 
-    chunk = infile.read(b)
-    while chunk:
-        chunk = chunk.ljust(b, b'\x00') #padding with 0 bytes if not large enough
-        encrypted_chunk = _encrypt_block(chunk, expanded_key, blocksize, rounds)
-        outfile.write(encrypted_chunk)
+    def __init__(self, key: bytes, blocksize: int, rounds: int) -> None:
+        self.key = key
+        self.blocksize = blocksize
+        self.rounds = rounds
 
-        chunk = infile.read(b) #Read in blocksize number of bytes
+    def encrypt(self, data: bytes) -> bytes:
+        blocksize = self.blocksize
+        key = self.key
+        rounds = self.rounds
 
-def decrypt_file(infile, outfile, key, blocksize, rounds):
-    w = blocksize//2
-    b = blocksize//8
+        w = blocksize//2
+        b = blocksize//8
 
-    expanded_key = _expand_key(key, w, rounds)
+        expanded_key = _expand_key(key, w, rounds)
 
-    chunk = infile.read(b)
-    while chunk:
-        decrypted_chunk = _decrypt_block(chunk, expanded_key, blocksize, rounds)
-        chunk = infile.read(b) #Read in blocksize number of bytes
-        if not chunk:
-            decrypted_chunk = decrypted_chunk.rstrip(b'\x00')
+        index = b
+        chunk = data[:index]
+        out = []
+        while chunk:
+            chunk = chunk.ljust(b, b'\x00') #padding with 0 bytes if not large enough
+            encrypted_chunk = _encrypt_block(chunk, expanded_key, blocksize, rounds)
+            out.append(encrypted_chunk)
 
-        outfile.write(decrypted_chunk)
+            chunk = data[index:index+b] #Read in blocksize number of bytes
+            index+=b
+        return b''.join(out)
+
+    def decrypt(self, data: bytes) -> bytes:
+        blocksize = self.blocksize
+        key = self.key
+        rounds = self.rounds
+
+        w = blocksize//2
+        b = blocksize//8
+
+        expanded_key = _expand_key(key, w, rounds)
+
+        index = b
+        chunk = data[:index]
+        out = []
+        while chunk:
+            decrypted_chunk = _decrypt_block(chunk, expanded_key, blocksize, rounds)
+            chunk = data[index:index+b] #Read in blocksize number of bytes
+            if not chunk:
+                decrypted_chunk = decrypted_chunk.rstrip(b'\x00')
+
+            index+=b
+            out.append(decrypted_chunk)
+        return b''.join(out)
